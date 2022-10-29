@@ -1,9 +1,11 @@
 import discord
+import datetime
 from discord.errors import NotFound
 from asyncio import sleep
 from discord import app_commands, utils
 from database import init_bot_db, RolesDatabase
 from settings_bot import config
+from derpibooru import Search, sort
 
 role_db = RolesDatabase()
 settings = config()
@@ -146,6 +148,23 @@ async def self(interaction: discord.Integration, role: discord.Role):
     await message.clear_reaction(emoji=data[2])
     await interaction.response.send_message(f"✅ `[SUCCESS]` Issuing role {role.mention} was successfully deleted.", ephemeral=True)
 
+@tree.command(name="mlp-nsfw-random", description="Тест рассылки NSFW контента.",
+              guild=discord.Object(id=settings["main_guild"]))
+@app_commands.checks.has_permissions(administrator=True)
+async def self(interaction: discord.Integration):
+    for image in Search(filter_id='37432').sort_by(sort.RANDOM).limit(1):
+        await interaction.response.send_message(f"✅ Кринж был успешно запощен.\n" + image.url, ephemeral=False)
+        now = datetime.datetime.now()
+        print(f"✅ Кринж был успешно запощен.", now.time(), "-", image.url)
+
+@tree.command(name="mlp-nsfw-tag", description="Тест рассылки NSFW контента 2.",
+              guild=discord.Object(id=settings["main_guild"]))
+@app_commands.checks.has_permissions(administrator=True)
+async def self(interaction: discord.Integration, tag1: str, tag2: str, tag3: str, tag4: str,):
+    for image in Search(filter_id='37432').query(tag1, tag2, tag3, tag4).limit(1):
+        await interaction.response.send_message(f"✅ Кринж был успешно запощен.\n" + image.url, ephemeral=False)
+        now = datetime.datetime.now()
+        print(f"✅ Кринж был успешно запощен.", now.time(), "-", image.url)
 
 @tree.error
 async def on_app_command_error(interaction, error):
