@@ -169,7 +169,7 @@ async def self(interaction: discord.Integration, tag1: str, tag2: str, tag3: str
 
 @tree.command(name="pidortest", description="Тест использовавшей данную команду персоны на гомосексуальную ориентацию.",
               guild=discord.Object(id=settings["main_guild"]))
-@app_commands.checks.has_permissions(administrator=Any)
+#@app_commands.checks.has_permissions(administrator=False)
 async def self(interaction: discord.Integration):
     rand = random.choice([0, 1])
     if (rand==1):
