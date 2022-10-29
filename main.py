@@ -171,8 +171,8 @@ async def self(interaction: discord.Integration, tag1: str, tag2: str, tag3: str
               guild=discord.Object(id=settings["main_guild"]))
 #@app_commands.checks.has_permissions(administrator=False)
 async def self(interaction: discord.Integration):
-    rand = random.choice([0, 1])
-    if (rand==1):
+    rand = random.randint(0,100)
+    if (rand>=0 and rand<50):
         await interaction.response.send_message(f"Внимание, Вы пидор❗️", ephemeral=False)
         now = datetime.datetime.now()
         print(now.time(), f"- ❗️Внимание, на сервере обнаружен пидор!")
