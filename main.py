@@ -204,7 +204,7 @@ async def self(interaction: discord.Integration):
 @tree.command(name="change-bot-activity", description="Смена статуса бота.",
               guild=discord.Object(id=settings["main_guild"]))
 @app_commands.checks.has_permissions(administrator=True)
-async def self(interaction: discord.Integration, num: str):
+async def self(interaction: discord.Integration, num: int):
     if (num==1):
         await client.change_presence(status=discord.Status.online, activity=discord.Game("трусиках пальчиками"))
         await interaction.response.send_message(f'Статус успешно изменён на "Играю в трусиках пальчиками"✅', ephemeral=True)
