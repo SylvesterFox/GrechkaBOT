@@ -1,5 +1,6 @@
 import discord
 import datetime
+import random
 from discord.errors import NotFound
 from asyncio import sleep
 from discord import app_commands, utils
@@ -165,6 +166,20 @@ async def self(interaction: discord.Integration, tag1: str, tag2: str, tag3: str
         await interaction.response.send_message(f"✅ Кринж был успешно запощен.\n" + image.url, ephemeral=False)
         now = datetime.datetime.now()
         print(f"✅ Кринж был успешно запощен.", now.time(), "-", image.url)
+
+@tree.command(name="pidortest", description="Тест использовавшей данную команду персоны на гомосексуальную ориентацию.",
+              guild=discord.Object(id=settings["main_guild"]))
+@app_commands.checks.has_permissions(administrator=Any)
+async def self(interaction: discord.Integration):
+    rand = random.choice([0, 1])
+    if (rand==1):
+        await interaction.response.send_message(f"Внимание, Вы пидор❗️", ephemeral=False)
+        now = datetime.datetime.now()
+        print(now.time(), f"- ❗️Внимание, на сервере обнаружен пидор!")
+    else:
+        await interaction.response.send_message(f"Поздравляем, Вы натурал✅", ephemeral=False)
+        now = datetime.datetime.now()
+        print(now.time(), f"- ✅Всё хорошо, просканированный человек оказался натуралом.")
 
 @tree.error
 async def on_app_command_error(interaction, error):
