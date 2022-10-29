@@ -3,7 +3,6 @@ import datetime
 import random
 from discord.errors import NotFound
 from asyncio import sleep
-from discord.ext.commands import bot
 from discord import app_commands, utils
 from database import init_bot_db, RolesDatabase
 from settings_bot import config
