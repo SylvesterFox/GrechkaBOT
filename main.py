@@ -3,6 +3,7 @@ import datetime
 import random
 from discord.errors import NotFound
 from asyncio import sleep
+from discord.ext.commands import bot
 from discord import app_commands, utils
 from database import init_bot_db, RolesDatabase
 from settings_bot import config
@@ -32,6 +33,25 @@ class DiscordClient(discord.Client):
         if not self.synced:
             await tree.sync(guild=discord.Object(id=settings["main_guild"]))
         print(f"Буп!\nВы вошли как {self.user}")
+
+        rand = random.randint(0,100)
+        if (rand>=0 and rand<25):
+            await client.change_presence(status=discord.Status.online, activity=discord.Game("трусиках пальчиками"))
+            now = datetime.datetime.now()
+            print(now.time(), f"- Статус бота сегодня: Играю в трусиках пальчиками")
+        elif (rand>=25 and rand<50):
+            await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="музыку из MGR"))
+            now = datetime.datetime.now()
+            print(now.time(), f"- Статус бота сегодня: Слушаю музыку из MGR")
+        elif (rand>=50 and rand<75):
+            await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="в пустоту"))
+            now = datetime.datetime.now()
+            print(now.time(), f"- Статус бота сегодня: Смотрю в пустоту")
+        else:
+            await client.change_presence(status=discord.Status.online, activity=discord.Game("никчёмную жизнь"))
+            now = datetime.datetime.now()
+            print(now.time(), f"- Статус бота сегодня: Играю в никчёмную жизнь")
+
         try:
             await self.setup_emoji()
         except Exception as e:
@@ -114,8 +134,7 @@ intents = discord.Intents.default()
 intents.members = True
 client = DiscordClient(intents=intents)
 tree = app_commands.CommandTree(client)
-
-
+        
 # Command
 @tree.command(name="reactroleadd", description="Создаёт реакцию под сообщением для получения роли.",
               guild=discord.Object(id=settings["main_guild"]))
@@ -180,6 +199,34 @@ async def self(interaction: discord.Integration):
         await interaction.response.send_message(f"Поздравляем, Вы натурал✅", ephemeral=False)
         now = datetime.datetime.now()
         print(now.time(), f"- ✅Всё хорошо, просканированный человек оказался натуралом.")
+
+
+@tree.command(name="change-bot-activity", description="Смена статуса бота.",
+              guild=discord.Object(id=settings["main_guild"]))
+@app_commands.checks.has_permissions(administrator=True)
+async def self(interaction: discord.Integration):
+    rand = random.randint(0,100)
+    if (rand>=0 and rand<25):
+        await client.change_presence(status=discord.Status.online, activity=discord.Game("трусиках пальчиками"))
+        await interaction.response.send_message(f'Статус успешно изменён на "Играю в трусиках пальчиками"✅', ephemeral=True)
+        now = datetime.datetime.now()
+        print(now.time(), f"- Статус бота изменён на: Играю в трусиках пальчиками")
+    elif (rand>=25 and rand<50):
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="музыку из MGR"))
+        await interaction.response.send_message(f'Статус успешно изменён на "Слушаю музыку из MGR"✅', ephemeral=True)
+        now = datetime.datetime.now()
+        print(now.time(), f"- Статус бота изменён на: Слушаю музыку из MGR")
+    elif (rand>=50 and rand<75):
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="в пустоту"))
+        await interaction.response.send_message(f'Статус успешно изменён на "Смотрю в пустоту"✅', ephemeral=True)
+        now = datetime.datetime.now()
+        print(now.time(), f"- Статус бота изменён на: Смотрю в пустоту")
+    else:
+        await client.change_presence(status=discord.Status.online, activity=discord.Game("никчёмную жизнь"))
+        await interaction.response.send_message(f'Статус успешно изменён на "Играю в никчёмную жизнь"✅', ephemeral=True)
+        now = datetime.datetime.now()
+        print(now.time(), f"- Статус бота изменён на: Играю в никчёмную жизнь")
+
 
 @tree.error
 async def on_app_command_error(interaction, error):
