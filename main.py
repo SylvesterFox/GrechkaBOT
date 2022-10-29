@@ -204,24 +204,23 @@ async def self(interaction: discord.Integration):
 @tree.command(name="change-bot-activity", description="Смена статуса бота.",
               guild=discord.Object(id=settings["main_guild"]))
 @app_commands.checks.has_permissions(administrator=True)
-async def self(interaction: discord.Integration):
-    rand = random.randint(0,100)
-    if (rand>=0 and rand<25):
+async def self(interaction: discord.Integration, num: str):
+    if (num==1):
         await client.change_presence(status=discord.Status.online, activity=discord.Game("трусиках пальчиками"))
         await interaction.response.send_message(f'Статус успешно изменён на "Играю в трусиках пальчиками"✅', ephemeral=True)
         now = datetime.datetime.now()
         print(now.time(), f"- Статус бота изменён на: Играю в трусиках пальчиками")
-    elif (rand>=25 and rand<50):
+    elif (num==2):
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="музыку из MGR"))
         await interaction.response.send_message(f'Статус успешно изменён на "Слушаю музыку из MGR"✅', ephemeral=True)
         now = datetime.datetime.now()
         print(now.time(), f"- Статус бота изменён на: Слушаю музыку из MGR")
-    elif (rand>=50 and rand<75):
+    elif (num==3):
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="в пустоту"))
         await interaction.response.send_message(f'Статус успешно изменён на "Смотрю в пустоту"✅', ephemeral=True)
         now = datetime.datetime.now()
         print(now.time(), f"- Статус бота изменён на: Смотрю в пустоту")
-    else:
+    elif (num==4):
         await client.change_presence(status=discord.Status.online, activity=discord.Game("никчёмную жизнь"))
         await interaction.response.send_message(f'Статус успешно изменён на "Играю в никчёмную жизнь"✅', ephemeral=True)
         now = datetime.datetime.now()
