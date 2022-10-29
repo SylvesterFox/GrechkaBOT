@@ -30,7 +30,7 @@ class DiscordClient(discord.Client):
         await self.wait_until_ready()
         if not self.synced:
             await tree.sync(guild=discord.Object(id=settings["main_guild"]))
-        print(f"Rawr!\nWe have logged in as {self.user}")
+        print(f"Буп!\nВы вошли как {self.user}")
         try:
             await self.setup_emoji()
         except Exception as e:
@@ -60,12 +60,12 @@ class DiscordClient(discord.Client):
         try:
             role = utils.get(message.guild.roles, id=data_db[0])
             await member.add_roles(role)
-            print(f"[SUCCESS] User {member.name} has been granted with role: {role.name}")
+            print(f"[УСПЕХ] Пользователю {member.name} была выдана роль: {role.name}")
         except KeyError as e:
-            print("[ERROR] KeyError, no role found for " + e)
+            print("[ОШИБКА] Ошибка ключа, не найдена роль для" + e)
         except AttributeError as e:
-            print(f"[ERROR] The role attribute was not found, it seems that it is no longer in the guild, or it has been deleted:\n {e}")
-            print("[Attention] the settings of this role will be deleted from the database")
+            print(f"[ОШИБКА] Атрибут роли не найден, похоже, что его больше нет на сервере, или он был удален:\n {e}")
+            print("[Внимание] Настройки этой роли будут удалены из базы данных.")
             await sleep(10.0)
             _ = role_db.db_role_delete(role_id=data_db[0])
             await message.remove_reaction(payload.emoji, member=self.user)
@@ -96,12 +96,12 @@ class DiscordClient(discord.Client):
         try:
             role = utils.get(message.guild.roles, id=data_db[0])
             await member.remove_roles(role)
-            print(f"[SUCCESS] User {member.name} has been remove with role: {role.name}")
+            print(f"[УСПЕХ] У пользователя {member.name} была удалена роль: {role.name}")
         except KeyError as e:
-            print("[ERROR] KeyError, no role found for " + e)
+            print("[ОШИБКА] Ошибка ключа, не найдена роль для " + e)
         except AttributeError as e:
-            print(f"[ERROR] The role attribute was not found, it seems that it is no longer in the guild, or it has been deleted:\n {e}")
-            print("[Warning] the settings of this role will be deleted from the database after 10 seconds")
+            print(f"[ОШИБКА] Атрибут роли не найден, похоже, что его больше нет на сервере, или он был удален:\n {e}")
+            print("[Внимание] Настройки этой роли будут удалены из базы данных через 10 секунд.")
             await sleep(10.0)
             _ = role_db.db_role_delete(role_id=data_db[0])
             await message.clear_reaction(payload.emoji)
@@ -116,7 +116,7 @@ tree = app_commands.CommandTree(client)
 
 
 # Command
-@tree.command(name="reactroleadd", description="Creates a reaction under the message to issue the desired role.",
+@tree.command(name="reactroleadd", description="Создаёт реакцию под сообщением для получения роли.",
               guild=discord.Object(id=settings["main_guild"]))
 @app_commands.checks.has_permissions(administrator=True)
 async def self(interaction: discord.Integration, channel: discord.TextChannel, id_message: str, emoji: str,
@@ -127,27 +127,27 @@ async def self(interaction: discord.Integration, channel: discord.TextChannel, i
                             role_id=role.id)
         await message.add_reaction(emoji)
         await interaction.response.send_message(
-            f"✅ `[SUCCESS]` You have successfully created a role to issue: {role.mention}\n"
-            f"Was created on this reaction: {emoji}"
-            f" and on this [Message](https://discord.com/channels/{interaction.guild.id}/{channel.id}/{id_message})",
+            f"✅ `[УСПЕХ]` Получаемая роль: {role.mention}\n"
+            f"Реакция для получения роли: {emoji}"
+            f" на этом сообщении [Message](https://discord.com/channels/{interaction.guild.id}/{channel.id}/{id_message})",
             ephemeral=True)
     except NotFound as e:
-        await interaction.response.send_message(f"💢 [ERROR] {e}", ephemeral=True)
+        await interaction.response.send_message(f"💢 [ОШИБКА] {e}", ephemeral=True)
 
 
-@tree.command(name="reactroleremove", description="Removes the reaction for issuing a role.",
+@tree.command(name="reactroleremove", description="Удаляет реакцию на получение роли.",
               guild=discord.Object(id=settings["main_guild"]))
 @app_commands.checks.has_permissions(administrator=True)
 async def self(interaction: discord.Integration, role: discord.Role):
     data = role_db.db_role_delete(role_id=role.id)
     if data is None:
-        await interaction.response.send_message("⚠ `[Warning]` This role does not exist or has long since been removed from the database results.", ephemeral=True)
+        await interaction.response.send_message("⚠ `[Внимание]` Эта роль большне не существует или уже удалена из базы данных.", ephemeral=True)
         return
     channel = client.get_channel(data[1])
     message = await channel.fetch_message(data[0])
     await message.clear_reaction(emoji=data[2])
-    await interaction.response.send_message(f"✅ `[SUCCESS]` Issuing role {role.mention} was successfully deleted.", ephemeral=True)
-
+    await interaction.response.send_message(f"✅ `[УСПЕХ]` Роль выдачи {role.mention} была успешно удалена.", ephemeral=True)
+    
 @tree.command(name="mlp-nsfw-random", description="Тест рассылки NSFW контента.",
               guild=discord.Object(id=settings["main_guild"]))
 @app_commands.checks.has_permissions(administrator=True)
