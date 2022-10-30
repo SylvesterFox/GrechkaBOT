@@ -167,7 +167,7 @@ async def self(interaction: discord.Integration, role: discord.Role):
     await message.clear_reaction(emoji=data[2])
     await interaction.response.send_message(f"✅ `[УСПЕХ]` Роль выдачи {role.mention} была успешно удалена.", ephemeral=True)
     
-@tree.command(name="mlp-nsfw-random", description="Тест рассылки NSFW контента.",
+@tree.command(name="mlp-nsfw-random", description="Постинг рандомного NSFW контента с Derpibooru.",
               guild=discord.Object(id=settings["main_guild"]))
 @app_commands.checks.has_permissions(administrator=True)
 async def self(interaction: discord.Integration):
@@ -176,7 +176,7 @@ async def self(interaction: discord.Integration):
         now = datetime.datetime.now()
         print(f"✅ Кринж был успешно запощен.", now.time(), "-", image.url)
 
-@tree.command(name="mlp-nsfw-tag", description="Тест рассылки NSFW контента 2.",
+@tree.command(name="mlp-nsfw-tag", description="Постинг NSFW контента от 1 до 4-х тэгов с Derpibooru.",
               guild=discord.Object(id=settings["main_guild"]))
 @app_commands.checks.has_permissions(administrator=True)
 async def self(interaction: discord.Integration, tag1: str, tag2: str = None, tag3: str = None, tag4: str = None):
@@ -185,7 +185,7 @@ async def self(interaction: discord.Integration, tag1: str, tag2: str = None, ta
         now = datetime.datetime.now()
         print(f"✅ Кринж был успешно запощен.", now.time(), "-", image.url)
 
-@tree.command(name="pidortest", description="Тест использовавшей данную команду персоны на гомосексуальную ориентацию.",
+@tree.command(name="pidortest", description="Тест персоны, использовавшей данную команду на гомосексуальную ориентацию.",
               guild=discord.Object(id=settings["main_guild"]))
 #@app_commands.checks.has_permissions(administrator=False)
 async def self(interaction: discord.Integration):
