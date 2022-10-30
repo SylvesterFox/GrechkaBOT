@@ -179,7 +179,7 @@ async def self(interaction: discord.Integration):
 @tree.command(name="mlp-nsfw-tag", description="Тест рассылки NSFW контента 2.",
               guild=discord.Object(id=settings["main_guild"]))
 @app_commands.checks.has_permissions(administrator=True)
-async def self(interaction: discord.Integration, tag1: str, tag2: str, tag3: str, tag4: str,):
+async def self(interaction: discord.Integration, tag1: str, tag2: str = None, tag3: str = None, tag4: str = None):
     for image in Search(filter_id='37432').query(tag1, tag2, tag3, tag4).limit(1):
         await interaction.response.send_message(f"✅ Кринж был успешно запощен.\n" + image.url, ephemeral=False)
         now = datetime.datetime.now()
