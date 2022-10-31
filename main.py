@@ -224,6 +224,12 @@ async def self(interaction: discord.Integration, num: int):
         await interaction.response.send_message(f'Статус успешно изменён на "Играю в никчёмную жизнь"✅', ephemeral=True)
         now = datetime.datetime.now()
         print(now.time(), f"- Статус бота изменён на: Играю в никчёмную жизнь")
+    elif (num==5):
+        #Halloween time
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="как горят души."))
+        await interaction.response.send_message(f'Статус успешно изменён на "Смотрю как горят души"✅', ephemeral=True)
+        now = datetime.datetime.now()
+        print(now.time(), f"- Статус бота изменён на: Смотрю как горят души.")
 
 
 @tree.error
