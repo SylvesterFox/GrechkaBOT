@@ -33,6 +33,7 @@ class DiscordClient(commands.Bot):
             await self.load_extension(extend)
             print(f"Load - {extend}")
         await self.tree.sync(guild = discord.Object(id = settings["main_guild"]))
+        # await self.tree.sync(guild=discord.Object(id=617020672929169418)) # это для дебага
         print(f"Synced slash commands for {self.user}")
 
     async def setup_emoji(self):
