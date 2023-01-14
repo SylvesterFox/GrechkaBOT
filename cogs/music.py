@@ -37,20 +37,110 @@ class Music(commands.Cog):
         await channel.connect(cls=wavelink.Player)
         await interaction.response.send_message("Bot connect to the voice..", ephemeral=True)
 
-    @app_commands.command(name="stop", description="Disconnect to the voice channel")
-    async def stop_voice(self, interaction: discord.Integration):
-        voice_connect = interaction.guild.voice_client
-        await voice_connect.disconnect()
-        await interaction.response.send_message("Disconnect..", ephemeral=True)
+    @app_commands.command(name="leave", description="Disconnect to the voice channel")
+    async def leave_voice(self, interaction: discord.Integration):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(interaction.guild)
+
+
+        if player is None:
+            return await interaction.response.send_message("Bot is not connected to any voice channel", ephemeral=True)
+
+        member = interaction.guild.get_member(interaction.user.id)
+        member_bot = interaction.guild.get_member(self.bot.user.id)
+        channel = member.voice
+
+        if channel is None:
+            return await interaction.response.send_message("You cannot use the command without being in the voice channel.", ephemeral=True)
+        elif channel.channel.id != member_bot.voice.channel.id:
+            return await interaction.response.send_message("You cannot use the command without being in the voice channel.", ephemeral=True)
+
+        await player.disconnect()
+        await interaction.response.send_message("Disconnected..", ephemeral=True)
         
-    @stop_voice.error
-    async def stop_commnd_error(self, interaction, error):
-        if isinstance(error, app_commands.CommandInvokeError):
-            await interaction.response.send_message("The bot no longer exists in your channels", ephemeral=True)
+    @app_commands.command(name="play", description="Staring play sound from URL")
+    async def play_command(self, interaction: discord.Integration, query: str):
+        search = await wavelink.YouTubeTrack.search(query=query, return_first=True)
+        member = interaction.guild.get_member(interaction.user.id)
+
+        if not interaction.guild.voice_client:
+            vc: wavelink.Player = await member.voice.channel.connect(cls=wavelink.Player)
         else:
-            raise error
+            vc: wavelink.Player = interaction.guild.voice_client
 
+        await vc.play(search)
 
+        embed_play = discord.Embed(title=f"Now Playing {search}, length sound {search.length}" , color=discord.Color.blurple())
+        await interaction.response.send_message("", embed=embed_play)
+
+    @app_commands.command(name="stop", description="Stop playing sound")
+    async def stop_command(self, interaction: discord.Integration):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(interaction.guild)
+
+        if player is None:
+            return await interaction.response.send_message("Bot is not connected to any voice channel", ephemeral=True)
+        
+        if player.is_playing:
+            await player.stop()
+            embed = discord.Embed(title="Playback Stoped", color=discord.Colour.blurple())
+            await interaction.response.send_message("", embed=embed)
+        else:
+            return await interaction.response.send_message("Nothing Is playing right now", ephemeral=True)
+
+    @app_commands.command(name="pause", description="Paused playback")
+    async def pause_command(self, interaction: discord.Integration):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(interaction.guild)
+
+        if player is None:
+            return await interaction.response.send_message("Bot is not connected to any voice channel", ephemeral=True)
+
+        if not player.is_paused():
+            if player.is_playing():
+                await player.pause()
+                embed = discord.Embed(title="Playback Paused", color=discord.Color.blurple())
+                await interaction.response.send_message("", embed=embed)
+            else:
+                return await interaction.response.send_message("Nothing Is playing right now", ephemeral=True)
+        else:
+            return await interaction.response.send_message("Playback is Aiready paused")
+
+    @app_commands.command(name="resume", description="Playback resumed")
+    async def resume_command(self, interaction: discord.Integration):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(interaction.guild)
+
+        if player is None:
+            return await interaction.response.send_message("Bot is not connected to any voice channel", ephemeral=True)
+        
+        if player.is_paused():
+            await player.resume()
+            embed = discord.Embed(title="Playback resumed", color=discord.Color.blurple())
+            return await interaction.response.send_message("", embed=embed)
+        else:
+            return await interaction.response.send_message("Playblack is not paused")
+
+    @app_commands.command(name="volume", description="Playback volume")
+    async def volume_command(self, interaction: discord.Integration, to: int):
+        if to > 100:
+            return await interaction.response.send_message("Volume should between 0 and 100")
+        elif to < 1:
+            return await interaction.response.send_message("Volume should between 0 and 100")
+
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(interaction.guild)
+
+        await player.set_volume(to)
+        embed = discord.Embed(title=f"Changed Volume to {to}", color=discord.Color.blurple())
+        await interaction.response.send_message("", embed=embed)
+
+    @app_commands.command(name="seek", description="Seek to the given position in the song.")
+    async def seek_command(self, interaction: discord.Integration, seek: str):
+        node = wavelink.NodePool.get_node()
+        player = node.get_player(interaction.guild)
+        print(player.source.length)
+        
 
 async def setup(bot: commands.Bot):
     settings = config()
