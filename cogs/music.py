@@ -2,6 +2,8 @@ import discord
 import wavelink
 import typing
 import re
+import asyncio
+import datetime as dt
 from discord.ext import commands
 from discord import app_commands
 from settings_bot import config
@@ -12,11 +14,11 @@ URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.queue = []
-        self.position = 0
-        self.repeat = False
-        self.repeatMode = "NONE"
-        self.playingTextChannel = 0
+        # self.queue = []
+        # self.position = 0
+        # self.repeat = False
+        # self.repeatMode = "NONE"
+        # self.playingTextChannel = 0
         bot.loop.create_task(self.create_node())
 
     async def create_node(self):
@@ -27,31 +29,32 @@ class Music(commands.Cog):
     async def on_wavelink_node_ready(self, node: wavelink.Node):
         print(f"Node: <{node.identifier}> is now Ready!")
 
-    @commands.Cog.listener()
-    async def on_wavelink_track_start(self, player: wavelink.player, track: wavelink.Track):
-        try:
-            self.queue.pup(0)
-        except:
-            pass
+    # @commands.Cog.listener()
+    # async def on_wavelink_track_start(self, player: wavelink.player, track: wavelink.Track):
+    #     try:
+    #         self.queue.pup(0)
+    #     except:
+    #         pass
 
-    @commands.Cog.listener()
-    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
-        if str(reason) == "FINISHED":
-            if not len(self.queue) == 0:
-                next_track: wavelink.Track = self.queue[0]
-                channel = self.bot.get_channel(self.playingTextChannel)
+    # @commands.Cog.listener()
+    # async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
+    #     if str(reason) == "FINISHED":
+    #         if not len(self.queue) == 0:
+    #             next_track: wavelink.Track = self.queue[0]
+    #             channel = self.bot.get_channel(self.playingTextChannel)
 
-                try:
-                    await player.play(next_track)
-                except:
-                    return await channel.send(embed=discord.Embed(
-                        title=f"Now playing: {next_track.title}",
-                        color=discord.Color.blurple()
-                    ))
-            else:
-                pass
-        else:
-            print(reason)
+    #             try:
+    #                 await player.play(next_track)
+    #             except:
+    #                 return await channel.send(embed=discord.Embed(
+    #                     title=f"Now playing: {next_track.title}",
+    #                     color=discord.Color.blurple()
+    #                 ))
+    #         else:
+    #             pass
+    #     else:
+    #         print(reason, " test")
+
 
     @app_commands.command(name="join", description="Connection to the voice channel")
     async def join_voice(self, interaction: discord.Integration, channel: typing.Optional[discord.VoiceChannel] = None):
@@ -96,35 +99,75 @@ class Music(commands.Cog):
     @app_commands.command(name="play", description="Staring play sound from URL")
     async def play_command(self, interaction: discord.Integration, query: str):
         try:
-            search = await wavelink.YouTubeTrack.search(query=query, return_first=True)
+            search = await wavelink.YouTubeTrack.search(query=query)
         except:
             return await interaction.response.send_message("", embed=discord.Embed(
                 title="Something went wrong while searching for this track",
                 color=discord.Color.red()
             ))
-        node = wavelink.NodePool.get_node()
-        player = node.get_player(interaction.guild)
+
+        if search is None:
+            return await interaction.response.send_message("No tracks found")
+
+        
+        mbed = discord.Embed(
+            title="Select the track: ",
+            description=("\n".join(f"**{i+1}. {t.title}**" for i, t in enumerate(search[:5]))),
+            color=discord.Color.blurple()
+        )
+
+        await interaction.response.send_message("", embed=mbed)
+        msg = await interaction.original_response()
+        channel = self.bot.get_channel(msg.channel.id)
+        
+        emojis_list = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '❌']
+        emojis_dict = {
+            '1️⃣': 0,
+            "2️⃣": 1,
+            "3️⃣": 2,
+            "4️⃣": 3,
+            "5️⃣": 4,
+            "❌": -1
+        }
+
+        for emoji in list(emojis_list[:min(len(search), len(emojis_list))]):
+            await msg.add_reaction(emoji)
+
+        def check(res, user):
+            return (res.emoji in emojis_list and user == interaction.user and res.message.id == msg.id)
+
+        try:
+            reaction, _  = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await msg.delete()
+            return
+        else:
+            await msg.delete()
 
         member = interaction.guild.get_member(interaction.user.id)
+
+        try:
+            if emojis_dict[reaction.emoji] == -1: return
+            choosed_track = search[emojis_dict[reaction.emoji]]
+        except:
+            return
 
         if not interaction.guild.voice_client:
             vc: wavelink.Player = await member.voice.channel.connect(cls=wavelink.Player)
         else:
             vc: wavelink.Player = interaction.guild.voice_client
 
-        if not vc.is_playing():
-            try:
-                await vc.play(search)
-            except:
-                return await interaction.response.send_message("", embed=discord.Embed(
-                title="Something went wrong while searching for this track",
-                color=discord.Color.red()
-            ))
-        else:
-            self.queue.append(search)
+        try:
+            await vc.play(choosed_track)
+        except:
+            return await channel.send("", embed=discord.Embed(
+            title="Something went wrong while searching for this track",
+            color=discord.Color.red()
+        ))
+  
 
-        embed_play = discord.Embed(title=f"Added {search} to the queue" , color=discord.Color.blurple())
-        await interaction.response.send_message("", embed=embed_play)
+        embed_play = discord.Embed(title=f"Playing now {choosed_track}" , color=discord.Color.blurple())
+        await channel.send("", embed=embed_play)
 
     @app_commands.command(name="stop", description="Stop playing sound")
     async def stop_command(self, interaction: discord.Integration):
@@ -217,36 +260,37 @@ class Music(commands.Cog):
         await player.seek(secs * 1000)
         await interaction.response.send_message("Seeked", ephemeral=True)
     
-    @app_commands.command(name="playnow")
-    async def play_now_command(self, interaction: discord.Integration, search: str):
-        try:
-            search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
-        except:
-            return await interaction.response.send_message("", embed=discord.Embed(
-                title="Something went wrong while searching for this track",
-                color=discord.Color.red()
-            ))
 
+    @app_commands.command(name="nowplaying", description="Now playing sound")
+    async def now_play_command(self, interaction: discord.Integration):
         node = wavelink.NodePool.get_node()
         player = node.get_player(interaction.guild)
-        member = interaction.guild.get_member(interaction.user.id)
 
-        if not interaction.guild.voice_client:
-            vc: wavelink.Player = await member.voice.channel(cls=wavelink.Player)
-            await player.connect(member.voice.channel)
+        if player is None:
+            return await interaction.response.send_message("Bot is not connected to any voice channel")
+        
+        if player.is_playing():
+            mbed = discord.Embed(
+                title="Now playing",
+                color=discord.Colour.blurple(),
+                timestamp=dt.datetime.utcnow()
+            )
+            mbed.set_author(name="Playback Infomation")
+            mbed.add_field(name="Track title", value=player.track.info['title'], inline=False)
+            mbed.add_field(name="Artist", value=player.track.info['author'], inline=False)
+            t_sec = int(player.track.length)
+            hour = int(t_sec/3600)
+            min = int((t_sec%3600)/60)
+            sec = int((t_sec%3600)%60)
+            length = f"{hour}:{min}:{sec}" if not hour == 0 else f"{min}:{sec}"
+            mbed.add_field(name="Length", value=f"{length}", inline=False)
+
+            return await interaction.response.send_message(embed=mbed)
         else:
-            vc: wavelink.Player = interaction.guild.voice_client
+            return await interaction.response.send_message("Nothing is playing right now")
 
-        try:
-            await vc.play(search)
-        except:
-            return await interaction.response.send_message("", embed=discord.Embed(
-                title="Something went wrong while searching for this track",
-                color=discord.Color.red()
-            ))
-        
-
-        
+    
+    
 
 async def setup(bot: commands.Bot):
     settings = config()
