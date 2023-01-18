@@ -5,6 +5,7 @@ from settings_bot import config
 from discord.errors import NotFound
 from database import RolesDatabase
 
+
 class RoleGiver(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -39,6 +40,7 @@ class RoleGiver(commands.Cog):
         message = await channel.fetch_message(data[0])
         await message.clear_reaction(emoji=data[2])
         await interaction.response.send_message(f"✅ `[УСПЕХ]` Роль выдачи {role.mention} была успешно удалена.", ephemeral=True)
+
 
 async def setup(bot: commands.Bot):
     settings = config()

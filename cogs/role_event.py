@@ -1,12 +1,14 @@
-import discord
+import logging
 from discord.ext import commands
 from discord import utils
 from database import RolesDatabase
 from asyncio import sleep
 
+
 class RoleEvent(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.log = logging.getLogger(f'LunaBot.cogs.{__name__}')
         self.role_db = RolesDatabase()
 
     @commands.Cog.listener()
@@ -34,12 +36,12 @@ class RoleEvent(commands.Cog):
         try:
             role = utils.get(message.guild.roles, id=data_db[0])
             await member.add_roles(role)
-            print(f"[УСПЕХ] Пользователю {member.name} была выдана роль: {role.name}")
+            self.log.info(f"Пользователю {member.name} была выдана роль: {role.name}")
         except KeyError as e:
-            print("[ОШИБКА] Ошибка ключа, не найдена роль для" + e)
+            self.log.error("[ОШИБКА] Ошибка ключа, не найдена роль для: " + e)
         except AttributeError as e:
-            print(f"[ОШИБКА] Атрибут роли не найден, похоже, что его больше нет на сервере, или он был удален:\n {e}")
-            print("[Внимание] Настройки этой роли будут удалены из базы данных.")
+            self.log.error(f"Атрибут роли не найден, похоже, что его больше нет на сервере, или он был удален:\n {e}")
+            self.log.warning("Настройки этой роли будут удалены из базы данных.")
             await sleep(10.0)
             _ = self.role_db.db_role_delete(role_id=data_db[0])
             await message.remove_reaction(payload.emoji, member=self.user)
@@ -71,17 +73,18 @@ class RoleEvent(commands.Cog):
         try:
             role = utils.get(message.guild.roles, id=data_db[0])
             await member.remove_roles(role)
-            print(f"[УСПЕХ] У пользователя {member.name} была удалена роль: {role.name}")
+            self.log.info(f"У пользователя {member.name} была удалена роль: {role.name}")
         except KeyError as e:
-            print("[ОШИБКА] Ошибка ключа, не найдена роль для " + e)
+            self.log.error("Ошибка ключа, не найдена роль для: " + e)
         except AttributeError as e:
-            print(f"[ОШИБКА] Атрибут роли не найден, похоже, что его больше нет на сервере, или он был удален:\n {e}")
-            print("[Внимание] Настройки этой роли будут удалены из базы данных через 10 секунд.")
+            self.log.error(f"Атрибут роли не найден, похоже, что его больше нет на сервере, или он был удален:\n {e}")
+            self.log.warning("Настройки этой роли будут удалены из базы данных через 10 секунд.")
             await sleep(10.0)
             _ = self.role_db.db_role_delete(role_id=data_db[0])
             await message.clear_reaction(payload.emoji)
         except Exception as e:
-            print(repr(e))
+            self.log.error(repr(e))
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(RoleEvent(bot))

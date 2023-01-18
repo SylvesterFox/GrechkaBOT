@@ -1,6 +1,7 @@
 import discord 
 import wavelink
 import typing
+import logging
 import re
 import asyncio
 import datetime as dt
@@ -9,25 +10,24 @@ from discord import app_commands
 from settings_bot import config
 
 TIME_REGEX = r"([0-9]{1,2})[:ms](([0-9]{1,2})s?)?"
-URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s(" \
+            r")<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’])) "
+
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        # self.queue = []
-        # self.position = 0
-        # self.repeat = False
-        # self.repeatMode = "NONE"
-        # self.playingTextChannel = 0
+        self.log = logging.getLogger('LunaBot.cogs.Music')
         bot.loop.create_task(self.create_node())
 
     async def create_node(self):
         await self.bot.wait_until_ready()
-        await wavelink.NodePool.create_node(bot=self.bot, host="127.0.0.1", port="2333", password="youshallnotpass", region="europe")
+        await wavelink.NodePool.create_node(bot=self.bot, host="127.0.0.1", port="2333", password="youshallnotpass",
+                                            region="europe")
 
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, node: wavelink.Node):
-        print(f"Node: <{node.identifier}> is now Ready!")
+        self.log.info(f"Node: <{node.identifier}> is now Ready!")
 
     # @commands.Cog.listener()
     # async def on_wavelink_track_start(self, player: wavelink.player, track: wavelink.Track):
@@ -55,7 +55,6 @@ class Music(commands.Cog):
     #     else:
     #         print(reason, " test")
 
-
     @app_commands.command(name="join", description="Connection to the voice channel")
     async def join_voice(self, interaction: discord.Integration, channel: typing.Optional[discord.VoiceChannel] = None):
         if channel is None:
@@ -80,7 +79,6 @@ class Music(commands.Cog):
         node = wavelink.NodePool.get_node()
         player = node.get_player(interaction.guild)
 
-
         if player is None:
             return await interaction.response.send_message("Bot is not connected to any voice channel", ephemeral=True)
 
@@ -100,7 +98,8 @@ class Music(commands.Cog):
     async def play_command(self, interaction: discord.Integration, query: str):
         try:
             search = await wavelink.YouTubeTrack.search(query=query)
-        except:
+        except Exception as e:
+            print(e)
             return await interaction.response.send_message("", embed=discord.Embed(
                 title="Something went wrong while searching for this track",
                 color=discord.Color.red()
@@ -109,7 +108,6 @@ class Music(commands.Cog):
         if search is None:
             return await interaction.response.send_message("No tracks found")
 
-        
         mbed = discord.Embed(
             title="Select the track: ",
             description=("\n".join(f"**{i+1}. {t.title}**" for i, t in enumerate(search[:5]))),
@@ -134,10 +132,10 @@ class Music(commands.Cog):
             await msg.add_reaction(emoji)
 
         def check(res, user):
-            return (res.emoji in emojis_list and user == interaction.user and res.message.id == msg.id)
+            return res.emoji in emojis_list and user == interaction.user and res.message.id == msg.id
 
         try:
-            reaction, _  = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
+            reaction, _ = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
         except asyncio.TimeoutError:
             await msg.delete()
             return
@@ -149,8 +147,8 @@ class Music(commands.Cog):
         try:
             if emojis_dict[reaction.emoji] == -1: return
             choosed_track = search[emojis_dict[reaction.emoji]]
-        except:
-            return
+        except Exception as e:
+            return print(e)
 
         if not interaction.guild.voice_client:
             vc: wavelink.Player = await member.voice.channel.connect(cls=wavelink.Player)
@@ -159,12 +157,12 @@ class Music(commands.Cog):
 
         try:
             await vc.play(choosed_track)
-        except:
+        except Exception as e:
+            print(e)
             return await channel.send("", embed=discord.Embed(
-            title="Something went wrong while searching for this track",
-            color=discord.Color.red()
+                title="Something went wrong while searching for this track",
+                color=discord.Color.red()
         ))
-  
 
         embed_play = discord.Embed(title=f"Playing now {choosed_track}" , color=discord.Color.blurple())
         await channel.send("", embed=embed_play)
@@ -177,8 +175,6 @@ class Music(commands.Cog):
         if player is None:
             return await interaction.response.send_message("Bot is not connected to any voice channel", ephemeral=True)
 
-        self.queue.clear()
-        
         if player.is_playing:
             await player.stop()
             embed = discord.Embed(title="Playback Stoped", color=discord.Colour.blurple())
@@ -219,7 +215,7 @@ class Music(commands.Cog):
         else:
             if not len(self.queue) == 0:
                 track: wavelink.track = self.queue[0]
-                player.play(track)
+                await player.play(track)
                 return await interaction.response.send_message("", embed=discord.Embed(
                     title=f"Now playing: {track.title}",
                     color=discord.Color.blurple()
@@ -259,7 +255,6 @@ class Music(commands.Cog):
 
         await player.seek(secs * 1000)
         await interaction.response.send_message("Seeked", ephemeral=True)
-    
 
     @app_commands.command(name="nowplaying", description="Now playing sound")
     async def now_play_command(self, interaction: discord.Integration):
@@ -280,18 +275,16 @@ class Music(commands.Cog):
             mbed.add_field(name="Artist", value=player.track.info['author'], inline=False)
             t_sec = int(player.track.length)
             hour = int(t_sec/3600)
-            min = int((t_sec%3600)/60)
-            sec = int((t_sec%3600)%60)
+            min = int((t_sec % 3600) / 60)
+            sec = int((t_sec % 3600) % 60)
             length = f"{hour}:{min}:{sec}" if not hour == 0 else f"{min}:{sec}"
             mbed.add_field(name="Length", value=f"{length}", inline=False)
 
             return await interaction.response.send_message(embed=mbed)
         else:
-            return await interaction.response.send_message("Nothing is playing right now")
+            return await interaction.response.send_message("Nothing is playing right now", ephemeral=True)
 
-    
-    
 
 async def setup(bot: commands.Bot):
     settings = config()
-    await bot.add_cog(Music(bot), guilds=[discord.Object(id=settings['main_guild']), discord.Object(id=617020672929169418)])
+    await bot.add_cog(Music(bot), guilds=[discord.Object(id=settings['main_guild'])])
