@@ -29,32 +29,6 @@ class Music(commands.Cog):
     async def on_wavelink_node_ready(self, node: wavelink.Node):
         self.log.info(f"Node: <{node.identifier}> is now Ready!")
 
-    # @commands.Cog.listener()
-    # async def on_wavelink_track_start(self, player: wavelink.player, track: wavelink.Track):
-    #     try:
-    #         self.queue.pup(0)
-    #     except:
-    #         pass
-
-    # @commands.Cog.listener()
-    # async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
-    #     if str(reason) == "FINISHED":
-    #         if not len(self.queue) == 0:
-    #             next_track: wavelink.Track = self.queue[0]
-    #             channel = self.bot.get_channel(self.playingTextChannel)
-
-    #             try:
-    #                 await player.play(next_track)
-    #             except:
-    #                 return await channel.send(embed=discord.Embed(
-    #                     title=f"Now playing: {next_track.title}",
-    #                     color=discord.Color.blurple()
-    #                 ))
-    #         else:
-    #             pass
-    #     else:
-    #         print(reason, " test")
-
     @app_commands.command(name="join", description="Connection to the voice channel")
     async def join_voice(self, interaction: discord.Integration, channel: typing.Optional[discord.VoiceChannel] = None):
         if channel is None:
@@ -107,12 +81,14 @@ class Music(commands.Cog):
 
         if search is None:
             return await interaction.response.send_message("No tracks found")
-
-        mbed = discord.Embed(
-            title="Select the track: ",
-            description=("\n".join(f"**{i+1}. {t.title}**" for i, t in enumerate(search[:5]))),
-            color=discord.Color.blurple()
-        )
+        try:
+            mbed = discord.Embed(
+                title="Select the track: ",
+                description=("\n".join(f"**{i+1}. {t.title}**" for i, t in enumerate(search[:5]))),
+                color=discord.Color.blurple()
+            )
+        except TypeError as e:
+            return await interaction.response.send_message("Something went wrong..")
 
         await interaction.response.send_message("", embed=mbed)
         msg = await interaction.original_response()
