@@ -1,7 +1,11 @@
+[![](https://img.shields.io/badge/Version-Release_2.1-brightgreen.svg?style=for-the-badge)](#bot-version)
+[![](https://img.shields.io/badge/Python-3.8|3.9|3.10-blue.svg?style=for-the-badge)](#python)
 # LunaBOT - "IB-WorkShop" Discord server bot.
 
 Привет! Я пони-бот Луна, Я стану Вашим помощником-админом на Вашем сервере Discord, помогу в организации выдачи ролей по реакциям, воспроизведению музыки в голосовых каналах а так же возможности пользователям создавать свои приватные голосовые каналы.<br>
 P.S. Так же я могу постить NSFW арты с DerpyBooru, E621 и r34 ;)
+
+---
 
 ## Мои слэш-команды.
 *Все параметры в <> обязательны*<br>
