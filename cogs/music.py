@@ -65,12 +65,13 @@ class Music(commands.Cog):
             fin_embed.add_field(name="Length", value=f"{length}", inline=True)
             await channel.send(embed=fin_embed)
         else:
-            fin_embed = discord.Embed(color=discord.Color.blurple(),
-                                      timestamp=dt.datetime.utcnow(),
-                                      description="To extend, order more music through the `/play` command"
-                                      )
-            fin_embed.set_author(name="Queue is over..", icon_url=self.bot.user.avatar)
-            await channel.send(embed=fin_embed)
+            if reason == "FINISHED":
+                fin_embed = discord.Embed(color=discord.Color.blurple(),
+                                          timestamp=dt.datetime.utcnow(),
+                                          description="To extend, order more music through the `/play` command"
+                                          )
+                fin_embed.set_author(name="Queue is over..", icon_url=self.bot.user.avatar)
+                await channel.send(embed=fin_embed)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -154,7 +155,12 @@ class Music(commands.Cog):
             mbed.set_author(url=avatar, name="Select the track: ")
         except TypeError as e:
             self.log.warning(f"Exception {e}")
-            return await interaction.response.send_message("Something went wrong..")
+            embed_error = discord.Embed(color=discord.Color.red(),
+                                        timestamp=dt.datetime.utcnow(),
+                                        title="The `/play` command cannot work with playlists, use `/playlistadd`"
+                                        )
+            embed_error.set_author(name="Something went wrong..", icon_url=interaction.user.avatar)
+            return await interaction.response.send_message(embed=embed_error)
 
         await interaction.response.send_message("", embed=mbed)
         msg = await interaction.original_response()
@@ -394,24 +400,36 @@ class Music(commands.Cog):
 
             await player.seek(player.track.length * 1000)
 
-            await interaction.response.is_done()
+            mbed = discord.Embed(color=discord.Colour.blurple(),
+                                 timestamp=dt.datetime.utcnow(),
+                                 description=f"Track: [{player.track.info['title']}]({player.track.info['uri']}) has skip!"
+                                 )
+            mbed.set_author(name=f"User {interaction.user.display_name} skipped track",
+                            icon_url=interaction.user.avatar)
+
+            await interaction.response.send_message(embed=mbed)
             if player.is_paused():
                 await player.resume()
+        else:
+            return await interaction.response.send_message("Bot is not connected to any voice channel")
 
     @app_commands.command(name="queue", description="Show queue list")
     async def queue_command(self, interaction: discord.Integration):
         node = wavelink.NodePool.get_node()
         player = node.get_player(interaction.guild)
 
+        if player is None:
+            return await interaction.response.send_message("Bot is not connected to any voice channel")
+
         if not player.queue.is_empty:
             queue_list = player.queue
             mbed = discord.Embed(
-                title=f"Now playing {player.track}" if player.is_playing() else "Queue: ",
                 description="\n".join(f"**{i + 1}. {track}**" for i, track in enumerate(queue_list)),
                 color=discord.Color.blurple(),
                 timestamp=dt.datetime.utcnow()
             )
-            mbed.set_author(icon_url=interaction.user.avatar)
+            mbed.set_author(icon_url=interaction.user.avatar,
+                            name=f"Now playing {player.track}" if player.is_playing() else "Queue: ")
             return await interaction.response.send_message(embed=mbed)
         else:
             return await interaction.response.send_message("The queue is empty", ephemeral=True)
