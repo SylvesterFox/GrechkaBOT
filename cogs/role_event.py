@@ -1,7 +1,7 @@
 import logging
 from discord.ext import commands
 from discord import utils
-from database import RolesDatabase
+from core.database import RolesDatabase
 from asyncio import sleep
 
 

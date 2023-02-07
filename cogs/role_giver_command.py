@@ -1,9 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from settings_bot import config
+from core.settings_bot import config
 from discord.errors import NotFound
-from database import RolesDatabase
+from core.database import RolesDatabase
 
 
 class RoleGiver(commands.Cog):

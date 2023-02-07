@@ -7,7 +7,7 @@ import asyncio
 import datetime as dt
 from discord.ext import commands
 from discord import app_commands
-from settings_bot import config
+from core.settings_bot import config
 
 TIME_REGEX = r"([0-9]{1,2})[:ms](([0-9]{1,2})s?)?"
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s(" \

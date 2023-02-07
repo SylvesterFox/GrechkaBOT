@@ -1,5 +1,5 @@
-from settings_bot import config
-from main import client
+from core.settings_bot import config
+from core.main import client
 import logging
 
 

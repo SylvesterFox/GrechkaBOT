@@ -2,8 +2,8 @@ import discord
 import logging
 from random import choice
 from discord.ext import commands, tasks
-from database import init_bot_db, RolesDatabase
-from settings_bot import config
+from core.database import init_bot_db, RolesDatabase
+from core.settings_bot import config
 
 role_db = RolesDatabase()
 settings = config()

@@ -3,7 +3,7 @@ import sqlite3
 
 def db_connect(func):
     def inner(*args, **kwargs):
-        with sqlite3.connect("bot.db") as conn:
+        with sqlite3.connect("../bot.db") as conn:
             res = func(*args, conn=conn, **kwargs)
             return res
     return inner
@@ -12,12 +12,14 @@ def db_connect(func):
 @db_connect
 def init_bot_db(conn):
     c = conn.cursor()
+    # Role system
     c.execute("""CREATE TABLE IF NOT EXISTS role_reaction (
         guild_id INTEGER NOT NULL,
         channel_id INTEGER NOT NULL,
         message_id INTEGER NOT NULL,
         emoji TEXT NOT NULL,
         role_id INTEGER NOT NULL)""")
+    # Voice system
     c.execute("""CREATE TABLE IF NOT EXISTS vc_lobbys (
                 guild_id INTEGER NOT NULL,
                 vc_channel_id INTEGER NOT NULL)""")
@@ -26,7 +28,18 @@ def init_bot_db(conn):
                 name_channel TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 created_member_id INTEGER NOT NULL,
-                guild_id INTEGER NOT NULL)""")
+                guild_id INTEGER NOT NULL,
+                limit_vc INTEGER NOT NULL,
+                disable_voice BOOLEAN NOT NULL,
+                private_voice BOOLEAN DEFAULT (TRUE) NOT NULL
+                )""")
+    # Server settings
+    c.execute("""CREATE TABLE IF NOT EXISTS bot_guild_settings (
+                id INT PRIMARY KEY NOT NULL,
+                guild_id INTEGER NOT NULL,
+                lang_bot TEXT DEFAULT us_en NOT NULL,
+                music_channel_only BOOLEAN DEFAULT (FALSE) NOT NULL,
+                music_channel INTEGER NOT NULL)""")
     conn.commit()
 
 

@@ -1,8 +1,8 @@
 import discord
-from settings_bot import config
+from core.settings_bot import config
 from discord.ext import commands
 from discord import app_commands
-from database import VcDB
+from core.database import VcDB
 
 
 class VoiceCommand(commands.Cog):

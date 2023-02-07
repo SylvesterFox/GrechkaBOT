@@ -1,5 +1,5 @@
 import discord
-from database import VcDB
+from core.database import VcDB
 from discord.ext import commands
 
 

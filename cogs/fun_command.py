@@ -2,7 +2,7 @@ import discord
 import logging
 import random
 import datetime
-from settings_bot import config
+from core.settings_bot import config
 from discord.ext import commands
 from discord import app_commands
 
